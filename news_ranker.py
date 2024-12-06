@@ -1,8 +1,8 @@
 import logging
-import dataset_tools.mind as mind
+import recommenders.mind as mind
 
 from rankers.ranker_base import RankerBase
-from dataset_tools.news_feed_from_training import build_news_feed
+from recommenders.news_feed_from_training import build_news_feed
 
 logging.basicConfig(level=logging.INFO)
 

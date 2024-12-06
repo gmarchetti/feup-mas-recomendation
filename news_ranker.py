@@ -7,9 +7,9 @@ from dataset_tools.news_feed_from_training import build_news_feed
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-user_sessions, user_click_history = mind.read_clickhistory("train", "behaviors.tsv")
 
 def random_eval():
+    user_sessions, user_click_history = mind.read_clickhistory("train", "behaviors.tsv")
     logger.info(">>>> User Sessions <<<<")
     ranker = RankerBase()
     

@@ -10,6 +10,7 @@ from recommenders.models.newsrec.models.nrms import NRMSModel
 from recommenders.models.newsrec.models.base_model import BaseModel
 from recommenders.models.newsrec.io.mind_iterator import MINDIterator
 from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
+from recommenders.models.deeprec.deeprec_utils import cal_metric
 # from recommenders.utils.notebook_utils import store_metadata
 
 logging.basicConfig(level=logging.INFO)
@@ -74,5 +75,6 @@ hparams = prepare_hparams(yaml_file,
 print(hparams)
 
 iterator = MINDIterator
-model = RankerBase(hparams, iterator, seed=seed)
-print(model.run_eval(valid_news_file, valid_behaviors_file))
+# model = Model(hparams, iterator, seed=seed)
+print(cal_metric([[0,1,0,0],[1,0,0,0]], [[0,1,0,0],[1,0,0,0]], hparams.metrics))
+# print(model.run_eval(valid_news_file, valid_behaviors_file))

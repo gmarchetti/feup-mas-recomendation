@@ -10,7 +10,7 @@ import keras
 
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 
-tf.compat.v1.disable_eager_execution()
+# tf.compat.v1.disable_eager_execution()
 tf.compat.v1.experimental.output_all_intermediates(True)
 __all__ = ["BaseModel"]
 
@@ -408,8 +408,7 @@ class BaseModel:
         group_impr_indexes = []
         group_labels = []
         group_preds = []
-        print(">>>>><<<<<")
-        print(len(self.user_vecs))
+        
         for (
             impr_index,
             news_index,

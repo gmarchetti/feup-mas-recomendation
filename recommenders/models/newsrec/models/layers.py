@@ -4,11 +4,10 @@
 import tensorflow
 import keras as keras
 from tensorflow.linalg import einsum
-from keras import layers
-from keras import backend as K
+from keras import layers as K
 
 
-class AttLayer2(layers.Layer):
+class AttLayer2(K.Layer):
     """Soft alignment attention implement.
 
     Attributes:
@@ -108,7 +107,7 @@ class AttLayer2(layers.Layer):
         return input_shape[0], input_shape[-1]
 
 
-class SelfAttention(layers.Layer):
+class SelfAttention(K.Layer):
     """Multi-head self attention implement.
 
     Args:
@@ -288,22 +287,22 @@ def PersonalizedAttentivePooling(dim1, dim2, dim3, seed=0):
     vecs_input = keras.Input(shape=(dim1, dim2), dtype="float32")
     query_input = keras.Input(shape=(dim3,), dtype="float32")
 
-    user_vecs = layers.Dropout(0.2)(vecs_input)
-    user_att = layers.Dense(
+    user_vecs = K.Dropout(0.2)(vecs_input)
+    user_att = K.Dense(
         dim3,
         activation="tanh",
         kernel_initializer=keras.initializers.glorot_uniform(seed=seed),
         bias_initializer=keras.initializers.Zeros(),
     )(user_vecs)
-    user_att2 = layers.Dot(axes=-1)([query_input, user_att])
-    user_att2 = layers.Activation("softmax")(user_att2)
-    user_vec = layers.Dot((1, 1))([user_vecs, user_att2])
+    user_att2 = K.Dot(axes=-1)([query_input, user_att])
+    user_att2 = K.Activation("softmax")(user_att2)
+    user_vec = K.Dot((1, 1))([user_vecs, user_att2])
 
     model = keras.Model([vecs_input, query_input], user_vec)
     return model
 
 
-class ComputeMasking(layers.Layer):
+class ComputeMasking(K.Layer):
     """Compute if inputs contains zero value.
 
     Returns:
@@ -329,7 +328,7 @@ class ComputeMasking(layers.Layer):
         return input_shape
 
 
-class OverwriteMasking(layers.Layer):
+class OverwriteMasking(K.Layer):
     """Set values at specific positions to zero.
 
     Args:

@@ -3,6 +3,7 @@ import recommenders.datasets.mind as mind
 import os
 
 from rankers.ranker_base import RankerBase
+from tqdm import tqdm
 from recommenders.news_feed_from_training import build_news_feed
 from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
 from recommenders.models.newsrec.newsrec_utils import prepare_hparams
@@ -17,7 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
 
-MIND_type = 'demo'
+MIND_TYPE = 'demo'
 
 def random_eval():
     user_sessions, user_click_history = mind.read_clickhistory("train", "behaviors.tsv")
@@ -38,7 +39,7 @@ def random_eval():
 # if __name__ == '__main__':
 #     random_eval()
 
-data_path = f"./data/{MIND_type}"
+data_path = f"./data/{MIND_TYPE}"
 
 train_news_file = os.path.join(data_path, 'train', r'news.tsv')
 train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
@@ -49,7 +50,7 @@ userDict_file = os.path.join(data_path, "utils", "uid2index.pkl")
 wordDict_file = os.path.join(data_path, "utils", "word_dict.pkl")
 yaml_file = os.path.join(data_path, "utils", r'nrms.yaml')
 
-mind_url, mind_train_dataset, mind_dev_dataset, mind_utils = get_mind_data_set(MIND_type)
+mind_url, mind_train_dataset, mind_dev_dataset, mind_utils = get_mind_data_set(MIND_TYPE)
 
 if not os.path.exists(train_news_file):
     download_deeprec_resources(mind_url, os.path.join(data_path, 'train'), mind_train_dataset)
@@ -72,9 +73,26 @@ hparams = prepare_hparams(yaml_file,
                           batch_size=batch_size,
                           epochs=epochs,
                           show_step=10)
-print(hparams)
 
-iterator = MINDIterator
+iterator = MINDIterator(hparams)
+iterator.init_news(valid_news_file)
+iterator.init_behaviors(valid_behaviors_file)
+
+group_labels = []
+pred_labels = []
+
+random_ranker = RankerBase()
+
+for (impr_indexes,
+    impr_news,
+    uindexes,
+    impr_label) in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
+    
+    group_labels.append(impr_label)
+    pred_labels.append(random_ranker.predict(impr_news))
+
+    
+
 # model = Model(hparams, iterator, seed=seed)
-print(cal_metric([[0,1,0,0],[1,0,0,0]], [[0,1,0,0],[1,0,0,0]], hparams.metrics))
+print(cal_metric(group_labels, pred_labels, hparams.metrics))
 # print(model.run_eval(valid_news_file, valid_behaviors_file))

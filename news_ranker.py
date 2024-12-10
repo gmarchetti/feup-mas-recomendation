@@ -6,6 +6,7 @@ from rankers.ranker_base import RankerBase
 from rankers.simple_pref_rank import SimplePref
 from rankers.highest_pref_rank import HighestPref
 from rankers.negotiate_rank import NegotiatePref
+from rankers.voted_rank import VotedPref
 
 from tqdm import tqdm
 from recommenders.news_feed_from_training import build_news_feed
@@ -86,10 +87,12 @@ iterator.init_behaviors(valid_behaviors_file)
 group_labels = []
 
 ranker_models = [
-    RankerBase, 
-    SimplePref, 
-    HighestPref,
-    NegotiatePref]
+    # RankerBase, 
+    # SimplePref, 
+    # HighestPref,
+    # NegotiatePref,
+    VotedPref
+    ]
 rankers = {}
 predictions = {}
 
@@ -97,16 +100,16 @@ for ranker_model in ranker_models:
     rankers[ranker_model.__name__] = ranker_model(iterator)
     predictions[ranker_model.__name__] = []
 
-for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
-# impr_indexes, impr_news, uindexes, impr_label = iterator.load_impression_from_file(valid_behaviors_file).__next__()    
-    group_labels.append(impr_label)
-    for ranker_model in ranker_models:
-        cand_labels = rankers[ranker_model.__name__].predict(impr_news, impr_indexes)
-        predictions[ranker_model.__name__].append(cand_labels)
-        # print(">> Base")
-        # print(impr_label)
-        # print(">> Predictions")
-        # print(cand_labels)
+# for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
+impr_indexes, impr_news, uindexes, impr_label = iterator.load_impression_from_file(valid_behaviors_file).__next__()    
+group_labels.append(impr_label)
+for ranker_model in ranker_models:
+    cand_labels = rankers[ranker_model.__name__].predict(impr_news, impr_indexes)
+    predictions[ranker_model.__name__].append(cand_labels)
+    print(">> Base")
+    print(impr_label)
+    print(">> Predictions")
+    print(cand_labels)
 
 # print(iterator.load_data_from_file(valid_news_file, valid_behaviors_file).__next__())
 

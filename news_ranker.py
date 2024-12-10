@@ -4,6 +4,7 @@ import os
 
 from rankers.ranker_base import RankerBase
 from rankers.simple_pref_rank import SimplePref
+from rankers.highest_pref_rank import HighestPref
 
 from tqdm import tqdm
 from recommenders.news_feed_from_training import build_news_feed
@@ -82,22 +83,31 @@ iterator.init_news(valid_news_file)
 iterator.init_behaviors(valid_behaviors_file)
 
 group_labels = []
-random_pred_labels = []
-pref_pred_labels = []
 
-random_ranker = RankerBase(iterator)
-pref_ranker = SimplePref(iterator)
+ranker_models = [
+    # RankerBase, 
+    # SimplePref, 
+    HighestPref]
+rankers = {}
+predictions = {}
 
+for ranker_model in ranker_models:
+    rankers[ranker_model.__name__] = ranker_model(iterator)
+    predictions[ranker_model.__name__] = []
 
 for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
-    
+# impr_indexes, impr_news, uindexes, impr_label = iterator.load_impression_from_file(valid_behaviors_file).__next__()    
     group_labels.append(impr_label)
-    random_pred_labels.append(random_ranker.predict(impr_news, uindexes))
-    pref_pred_labels.append(pref_ranker.predict(impr_news, impr_indexes))
+    for ranker_model in ranker_models:
+        cand_labels = rankers[ranker_model.__name__].predict(impr_news, impr_indexes)
+        predictions[ranker_model.__name__].append(cand_labels)
+        print(">> Base")
+        print(impr_label)
+        print(">> Predictions")
+        print(cand_labels)
 
 # print(iterator.load_data_from_file(valid_news_file, valid_behaviors_file).__next__())
-    
-print(">>>>> Random Model <<<<<")
-print(cal_metric(group_labels, random_pred_labels, hparams.metrics))
-print(">>>>> Pref Model <<<<<")
-print(cal_metric(group_labels, pref_pred_labels, hparams.metrics))
+
+for ranker_model in ranker_models:
+    print(f">>>>> {ranker_model.__name__} <<<<<")    
+    print(cal_metric(group_labels, predictions[ranker_model.__name__], hparams.metrics))

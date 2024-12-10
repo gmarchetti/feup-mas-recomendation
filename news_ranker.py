@@ -5,6 +5,7 @@ import os
 from rankers.ranker_base import RankerBase
 from rankers.simple_pref_rank import SimplePref
 from rankers.highest_pref_rank import HighestPref
+from rankers.negotiate_rank import NegotiatePref
 
 from tqdm import tqdm
 from recommenders.news_feed_from_training import build_news_feed
@@ -85,9 +86,10 @@ iterator.init_behaviors(valid_behaviors_file)
 group_labels = []
 
 ranker_models = [
-    # RankerBase, 
-    # SimplePref, 
-    HighestPref]
+    RankerBase, 
+    SimplePref, 
+    HighestPref,
+    NegotiatePref]
 rankers = {}
 predictions = {}
 
@@ -101,10 +103,10 @@ for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impressi
     for ranker_model in ranker_models:
         cand_labels = rankers[ranker_model.__name__].predict(impr_news, impr_indexes)
         predictions[ranker_model.__name__].append(cand_labels)
-        print(">> Base")
-        print(impr_label)
-        print(">> Predictions")
-        print(cand_labels)
+        # print(">> Base")
+        # print(impr_label)
+        # print(">> Predictions")
+        # print(cand_labels)
 
 # print(iterator.load_data_from_file(valid_news_file, valid_behaviors_file).__next__())
 

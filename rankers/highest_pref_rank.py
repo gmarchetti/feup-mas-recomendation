@@ -7,8 +7,6 @@ class HighestPref(RankerBase):
 
     def eval_news(self, news, user_topics):
         cand_news_topic = self._data_loader.get_news_topics(news)[0]
-        print(cand_news_topic)
-        print(user_topics)
         if cand_news_topic in user_topics.keys():
             return user_topics[cand_news_topic]
         else:

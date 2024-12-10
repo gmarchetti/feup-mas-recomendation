@@ -3,6 +3,8 @@ import recommenders.datasets.mind as mind
 import os
 
 from rankers.ranker_base import RankerBase
+from rankers.simple_pref_rank import SimplePref
+
 from tqdm import tqdm
 from recommenders.news_feed_from_training import build_news_feed
 from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
@@ -10,6 +12,7 @@ from recommenders.models.newsrec.newsrec_utils import prepare_hparams
 from recommenders.models.newsrec.models.nrms import NRMSModel
 from recommenders.models.newsrec.models.base_model import BaseModel
 from recommenders.models.newsrec.io.mind_iterator import MINDIterator
+from rankers.io.news_data_iterator import NewsDataIterator
 from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 # from recommenders.utils.notebook_utils import store_metadata
@@ -64,7 +67,7 @@ if not os.path.exists(yaml_file):
 
 epochs = 1
 seed = 42
-batch_size = 32
+batch_size = 1
 
 hparams = prepare_hparams(yaml_file, 
                           wordEmb_file=wordEmb_file,
@@ -74,25 +77,27 @@ hparams = prepare_hparams(yaml_file,
                           epochs=epochs,
                           show_step=10)
 
-iterator = MINDIterator(hparams)
+iterator = NewsDataIterator(hparams)
 iterator.init_news(valid_news_file)
 iterator.init_behaviors(valid_behaviors_file)
 
 group_labels = []
-pred_labels = []
+random_pred_labels = []
+pref_pred_labels = []
 
-random_ranker = RankerBase()
+random_ranker = RankerBase(iterator)
+pref_ranker = SimplePref(iterator)
 
-for (impr_indexes,
-    impr_news,
-    uindexes,
-    impr_label) in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
+
+for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
     
     group_labels.append(impr_label)
-    pred_labels.append(random_ranker.predict(impr_news))
+    random_pred_labels.append(random_ranker.predict(impr_news, uindexes))
+    pref_pred_labels.append(pref_ranker.predict(impr_news, impr_indexes))
 
+# print(iterator.load_data_from_file(valid_news_file, valid_behaviors_file).__next__())
     
-
-# model = Model(hparams, iterator, seed=seed)
-print(cal_metric(group_labels, pred_labels, hparams.metrics))
-# print(model.run_eval(valid_news_file, valid_behaviors_file))
+print(">>>>> Random Model <<<<<")
+print(cal_metric(group_labels, random_pred_labels, hparams.metrics))
+print(">>>>> Pref Model <<<<<")
+print(cal_metric(group_labels, pref_pred_labels, hparams.metrics))

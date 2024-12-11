@@ -4,6 +4,7 @@
 import tensorflow as tf
 import numpy as np
 import os
+import random
 
 from tqdm import tqdm
 from datasets import IterableDataset, Dataset
@@ -18,7 +19,7 @@ class MindDatasetFactory():
     __histories = []
     __imprs = []
     __labels = []
-
+    __sampling_rate = 1
 
     def dummy_gen_2():
         yield {"title" : "and this works too"}
@@ -35,20 +36,21 @@ class MindDatasetFactory():
                 cand_news_title = MindDatasetFactory.__title_topics_by_index[candidate_impressions[cand_news_index]]
                 cand_label = candidate_labels[cand_news_index]
                 training_vect = {"hist_titles" : history_titles, "cand_title" : cand_news_title, "label" : cand_label}
-                yield training_vect
+                
+                if cand_label == 1 or random.uniform(0.0, 1.0) < MindDatasetFactory.__sampling_rate:                
+                    yield training_vect
 
     def create_dataset_object(self):
         mind = Dataset.from_generator(MindDatasetFactory.generate_training_sample)
         return mind
 
 
-    def __init__(self, news_file, behavior_file, col_spliter="\t", ID_spliter="%"):
+    def __init__(self, news_file, behavior_file, under_sampling_rate=1, col_spliter="\t", ID_spliter="%"):
 
+        MindDatasetFactory.__sampling_rate = under_sampling_rate
         self.col_spliter = col_spliter
         self.ID_spliter = ID_spliter
-        print("Reading News File")
         self.__init_news(news_file)
-        print("Reading Behavior File")
         self.__init_behaviors(behavior_file)
 
     def __init_news(self, news_file):
@@ -103,7 +105,7 @@ if __name__ == '__main__':
     train_news_file = os.path.join(data_path, 'train', r'news.tsv')
     train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
 
-    data_loader = MindDatasetFactory(train_news_file, train_behaviors_file)
+    data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.1)
 
     mind = data_loader.create_dataset_object()
 

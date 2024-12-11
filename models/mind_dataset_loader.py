@@ -9,9 +9,6 @@ import random
 from tqdm import tqdm
 from datasets import IterableDataset, Dataset
 
-def dummy_gen():
-    yield {"title" : "this works"}
-
 class MindDatasetFactory():
     __impr_indexes = []
     __news_topics_by_index = []
@@ -20,9 +17,6 @@ class MindDatasetFactory():
     __imprs = []
     __labels = []
     __sampling_rate = 1
-
-    def dummy_gen_2():
-        yield {"title" : "and this works too"}
 
     def generate_training_sample():
         for impr_idx in MindDatasetFactory.__impr_indexes:
@@ -36,9 +30,7 @@ class MindDatasetFactory():
                 cand_news_title = MindDatasetFactory.__title_topics_by_index[candidate_impressions[cand_news_index]]
                 cand_label = candidate_labels[cand_news_index]
                 training_vect = {"hist_titles" : history_titles, "cand_title" : cand_news_title, "label" : cand_label}
-                
-                if cand_label == 1 or random.uniform(0.0, 1.0) < MindDatasetFactory.__sampling_rate:                
-                    yield training_vect
+                yield training_vect
 
     def create_dataset_object(self):
         mind = Dataset.from_generator(MindDatasetFactory.generate_training_sample)
@@ -87,8 +79,19 @@ class MindDatasetFactory():
                 uid, time, history, impr = line.strip("\n").split(self.col_spliter)[-4:]
 
                 history = [self.__nid2index[i] for i in history.split()]
-                impr_news = [self.__nid2index[i.split("-")[0]] for i in impr.split()]
-                label = [int(i.split("-")[1]) for i in impr.split()]
+                impr_news = []
+                label = []
+                for news in impr.split():
+                    news_label = int(news.split("-")[1])
+                    news_index = self.__nid2index[news.split("-")[0]]
+                    random_draw = random.uniform(0.0, 1.0)
+                    # print(random_draw, news_label)
+                    if news_label == 1 or  random_draw < MindDatasetFactory.__sampling_rate:
+                        # print("Positive label or random select")
+                        label.append(news_label)
+                        impr_news.append(news_index)
+                    # else:
+                        # print("Ignoring sample")
 
                 MindDatasetFactory.__histories.append(history)
                 MindDatasetFactory.__imprs.append(impr_news)
@@ -105,7 +108,7 @@ if __name__ == '__main__':
     train_news_file = os.path.join(data_path, 'train', r'news.tsv')
     train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
 
-    data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.1)
+    data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.01)
 
     mind = data_loader.create_dataset_object()
 

@@ -11,8 +11,14 @@ from transformers import AutoModelForSequenceClassification, TrainingArguments, 
 tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
 
 def preprocess_function(examples):
-    full_concat = ("[SEP]".join(examples["hist_titles"]) + '[SEP]' +examples["cand_title"])
-    # print(full_concat, examples["label"])
+    full_concat = ""
+    for title in examples["hist_titles"]:
+        full_concat += title.lower() + "[SEP]"
+    
+    full_concat += examples["cand_title"].lower()
+    
+    # print(full_concat)
+
     return tokenizer(full_concat, truncation=True)
 
 def compute_metrics(eval_pred):
@@ -26,11 +32,9 @@ data_path = f"./data/demo"
 train_news_file = os.path.join(data_path, 'train', r'news.tsv')
 train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
 
-data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0)
+data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.05)
 
 mind = data_loader.create_dataset_object()
-
-# mini_mind = mind.shard(num_shards=100, index=0)
 
 tokenized_mind = mind.map(preprocess_function, batched=False)
 data_collator = DataCollatorWithPadding(tokenizer=tokenizer)
@@ -43,8 +47,8 @@ label2id = {"0": 0, "1": 1}
 model = AutoModelForSequenceClassification.from_pretrained("distilbert/distilbert-base-uncased", num_labels=2, id2label=id2label, label2id=label2id)
 
 training_args = TrainingArguments(
-    output_dir="models/news_prediction",
-    learning_rate=2e-4,
+    output_dir="models/news-prediction",
+    learning_rate=2e-5,
     per_device_train_batch_size=16,
     per_device_eval_batch_size=16,
     num_train_epochs=1,

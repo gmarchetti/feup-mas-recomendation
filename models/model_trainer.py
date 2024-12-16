@@ -16,8 +16,6 @@ def preprocess_function(examples):
         full_concat += title.lower() + "[SEP]"
     
     full_concat += examples["cand_title"].lower()
-    
-    # print(full_concat)
 
     return tokenizer(full_concat, truncation=True)
 
@@ -33,7 +31,6 @@ train_news_file = os.path.join(data_path, 'train', r'news.tsv')
 train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
 
 data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.05)
-
 mind = data_loader.create_dataset_object()
 
 tokenized_mind = mind.map(preprocess_function, batched=False)
@@ -49,9 +46,9 @@ model = AutoModelForSequenceClassification.from_pretrained("distilbert/distilber
 training_args = TrainingArguments(
     output_dir="models/news-prediction",
     learning_rate=2e-5,
-    per_device_train_batch_size=16,
+    per_device_train_batch_size=42,
     per_device_eval_batch_size=16,
-    num_train_epochs=1,
+    num_train_epochs=2,
     weight_decay=0.01,
     eval_strategy="epoch",
     save_strategy="epoch",

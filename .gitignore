@@ -163,3 +163,4 @@ cython_debug/
 
 train/*
 data/*
+models/news-prediction/*

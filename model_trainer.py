@@ -2,11 +2,31 @@ import evaluate
 import numpy as np
 import os
 
-from datasets import load_dataset
 from mind_dataset_loader import MindDatasetFactory
+from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
+from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
+
 from transformers import AutoTokenizer
 from transformers import DataCollatorWithPadding
 from transformers import AutoModelForSequenceClassification, TrainingArguments, Trainer
+
+MIND_TYPE = 'small'
+
+data_path = f"./data/{MIND_TYPE}"
+
+train_news_file = os.path.join(data_path, 'train', r'news.tsv')
+train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
+valid_news_file = os.path.join(data_path, 'valid', r'news.tsv')
+valid_behaviors_file = os.path.join(data_path, 'valid', r'behaviors.tsv')
+
+mind_url, mind_train_dataset, mind_dev_dataset, mind_utils = get_mind_data_set(MIND_TYPE)
+
+if not os.path.exists(train_news_file):
+    download_deeprec_resources(mind_url, os.path.join(data_path, 'train'), mind_train_dataset)
+    
+if not os.path.exists(valid_news_file):
+    download_deeprec_resources(mind_url, \
+                               os.path.join(data_path, 'valid'), mind_dev_dataset)
 
 tokenizer = AutoTokenizer.from_pretrained("distilbert/distilbert-base-uncased")
 
@@ -26,10 +46,6 @@ def compute_metrics(eval_pred):
 
     return accuracy.compute(predictions=predictions, references=labels)
 
-data_path = f"./data/demo"
-train_news_file = os.path.join(data_path, 'train', r'news.tsv')
-train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
-
 data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, 0.05)
 mind = data_loader.create_dataset_object()
 
@@ -48,7 +64,7 @@ training_args = TrainingArguments(
     learning_rate=2e-5,
     per_device_train_batch_size=42,
     per_device_eval_batch_size=16,
-    num_train_epochs=2,
+    num_train_epochs=5,
     weight_decay=0.01,
     eval_strategy="epoch",
     save_strategy="epoch",

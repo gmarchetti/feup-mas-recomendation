@@ -36,7 +36,35 @@ class MindDatasetFactory():
         mind = Dataset.from_generator(MindDatasetFactory.generate_training_sample)
         return mind
 
+    def get_news_offer_with_history(self, impr_idx):
+        
+        history_titles = []
+        history_topics = []
+        for hist_news in MindDatasetFactory.__histories[impr_idx]:
+            history_titles.append(MindDatasetFactory.__title_topics_by_index[hist_news])
+            history_topics.append(MindDatasetFactory.__news_topics_by_index[hist_news])
+        
+        candidate_impressions = MindDatasetFactory.__imprs[impr_idx]
+        candidate_titles_array = []
+        candidate_labels_array = []
+        candidate_topics_array = []
+        candidate_labels = MindDatasetFactory.__labels[impr_idx]
+        for cand_news_index in range(len(candidate_impressions)):
+            candidate_titles_array.append(MindDatasetFactory.__title_topics_by_index[candidate_impressions[cand_news_index]])
+            candidate_labels_array.append(candidate_labels[cand_news_index])
+            candidate_topics_array.append(MindDatasetFactory.__news_topics_by_index[candidate_impressions[cand_news_index]])
+        
+        return {"hist_titles" : history_titles, 
+                "hist_topics": history_topics, 
+                "cand_titles" : candidate_titles_array, 
+                "cand_topics" : candidate_topics_array,
+                "cand_news" : candidate_impressions,
+                "labels" : candidate_labels}        
 
+    def get_all_news_offers(self):
+        for impr_idx in MindDatasetFactory.__impr_indexes:
+            yield self.get_news_offer_with_history(impr_idx)
+            
     def __init__(self, news_file, behavior_file, under_sampling_rate=1, col_spliter="\t", ID_spliter="%"):
 
         MindDatasetFactory.__sampling_rate = under_sampling_rate

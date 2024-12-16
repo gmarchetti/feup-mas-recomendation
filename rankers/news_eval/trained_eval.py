@@ -2,6 +2,7 @@ import random
 import math
 import numpy
 import torch
+import logging
 
 from transformers import AutoTokenizer
 from transformers import AutoModelForSequenceClassification
@@ -17,9 +18,10 @@ class TrainedEval():
 
         return self.__tokenizer(full_concat, truncation=True, return_tensors="pt")
     
-    def __init__(self):
-        self.__tokenizer = AutoTokenizer.from_pretrained("models/news_prediction/checkpoint-4707")
-        self.__model = AutoModelForSequenceClassification.from_pretrained("models/news_prediction/checkpoint-4707", num_labels=2)
+    def __init__(self, model_path):
+        self.__tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.__model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=2)
+        self.__logger = logging.getLogger(__name__)
 
     def predict(self, hist_titles, cand_title):
         with torch.no_grad():
@@ -31,17 +33,17 @@ class TrainedEval():
 
     def order_news(self, impression_data):
         
-        cand_news = impression_data["cand_news"]
-        print(cand_news)
+        cand_news = impression_data["candidate_news_index"]
+        self.__logger.debug(cand_news)
         news_values_dict = {}
         idx = 0
-        for cand_news_title in impression_data["cand_titles"]:
-            news_values_dict[cand_news[idx]] = self.predict(impression_data["hist_titles"], cand_news_title)
+        for cand_news_title in impression_data["candidate_titles"]:
+            news_values_dict[cand_news[idx]] = self.predict(impression_data["history_titles"], cand_news_title)
             idx += 1
         
-        print(news_values_dict)
+        self.__logger.debug(news_values_dict)
         ordered_news = sorted(cand_news, key=lambda x: news_values_dict[x], reverse=True)
-        print(ordered_news)
+        self.__logger.debug(ordered_news)
         return ordered_news
     
     def eval_news_offer(self, news, round):

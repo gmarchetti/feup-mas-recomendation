@@ -34,6 +34,7 @@ class TrainedEval():
     def order_news(self, impression_data):
         
         cand_news = impression_data["candidate_news_index"]
+        self.__logger.debug(">>> Candidate news indexes")
         self.__logger.debug(cand_news)
         news_values_dict = {}
         idx = 0
@@ -41,8 +42,10 @@ class TrainedEval():
             news_values_dict[cand_news[idx]] = self.predict(impression_data["history_titles"], cand_news_title)
             idx += 1
         
+        self.__logger.debug(">>> Candidate news values")
         self.__logger.debug(news_values_dict)
         ordered_news = sorted(cand_news, key=lambda x: news_values_dict[x], reverse=True)
+        self.__logger.debug(">>> Sorted Candidate news indexes")
         self.__logger.debug(ordered_news)
         return ordered_news
     

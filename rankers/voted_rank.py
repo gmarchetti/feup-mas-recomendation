@@ -1,18 +1,24 @@
 import math
 import numpy
+import logging
 
 from rankers.ranker_base import RankerBase
 from rankers.news_eval.base_eval import BaseEval
+from rankers.news_eval.trained_eval import TrainedEval
+
+TOP_RANKS = 2
 
 class VotedPref(RankerBase):
 
     def __init__(self, iterator):
         super().__init__(iterator)
 
-        self.__title_eval = BaseEval()
+        self.__title_eval = TrainedEval("models/news-prediction/checkpoint-9414")
         self.__subject_eval = BaseEval()        
 
         self.__eps = 0.2
+
+        self.__logger = logging.getLogger(__name__)
 
     def add_votes(votes, news_idx, talied_votes: dict):
         if news_idx in talied_votes.keys():
@@ -20,33 +26,33 @@ class VotedPref(RankerBase):
         else:
             talied_votes[news_idx] = votes
 
-    def predict(self, impression_group, impr_index):
+    def predict(self, impression_info):
 
-        round = 0
-
-        title_order_preference = self.__title_eval.order_news(impression_group)
-        subject_order_preference = self.__subject_eval.order_news(impression_group)
+        impression_group = numpy.array(impression_info["candidate_news_index"])
+        
+        self.__logger.debug(f"Candidate news indexes: {impression_group}")
+        title_order_preference = self.__title_eval.order_news(impression_info)
+        subject_order_preference = self.__subject_eval.order_news(impression_info)
         
         news_votes = {}
 
-        for idx in range(min(2, len(impression_group))):
+        for idx in range(min(TOP_RANKS, len(impression_info))):
             VotedPref.add_votes(4/(idx+1), title_order_preference[idx], news_votes)
             VotedPref.add_votes(4/(idx+1), subject_order_preference[idx], news_votes)
 
-        print("Talied news votes")
-        print(news_votes)
-        # print("Initial order of news:", impression_group)
-        # print("Final order of news: ", predicted_news_order)
+        self.__logger.debug("Talied news votes")
+        self.__logger.debug(news_votes)
+
         total_winner_votes = max(news_votes.values())
-        print("Winners vote: ", total_winner_votes)      
-        highest_ranked_news = [key for key in news_votes if news_votes[key] == total_winner_votes]
-        print("Highest ranked news", highest_ranked_news)
+        self.__logger.debug(f"Winners vote: {total_winner_votes}")      
+        highest_ranked_news = numpy.array([key for key in news_votes if news_votes[key] == total_winner_votes])
+        self.__logger.debug(f"Highest ranked news: {highest_ranked_news}")
         
         highest_ranked_news_index = []
         for news in highest_ranked_news:
             highest_ranked_news_index.append(numpy.where(impression_group == news)[0][0])
         
-        print("Highest ranked news index:", highest_ranked_news_index)
+        self.__logger.debug(f"Highest ranked news index in impression: {highest_ranked_news_index}")
         news_predictions = []
         for idx in range(len(impression_group)):
             news_predictions.append(0)

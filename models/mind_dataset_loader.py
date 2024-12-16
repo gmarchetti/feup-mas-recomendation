@@ -54,11 +54,11 @@ class MindDatasetFactory():
             candidate_labels_array.append(candidate_labels[cand_news_index])
             candidate_topics_array.append(MindDatasetFactory.__news_topics_by_index[candidate_impressions[cand_news_index]])
         
-        return {"hist_titles" : history_titles, 
-                "hist_topics": history_topics, 
-                "cand_titles" : candidate_titles_array, 
-                "cand_topics" : candidate_topics_array,
-                "cand_news" : candidate_impressions,
+        return {"history_titles" : history_titles, 
+                "history_topics": history_topics, 
+                "candidate_titles" : candidate_titles_array, 
+                "candidates_topics" : candidate_topics_array,
+                "candidate_news_index" : candidate_impressions,
                 "labels" : candidate_labels}        
 
     def get_all_news_offers(self):

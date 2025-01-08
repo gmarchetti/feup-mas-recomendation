@@ -1,6 +1,8 @@
 import numpy
 import logging
+
 from rankers.ranker_base import RankerBase
+from .news_eval.user_history_topic_eval import UserHistoryTopicEval
 
 class HighestPref(RankerBase):
 
@@ -17,27 +19,8 @@ class HighestPref(RankerBase):
             return 0
 
     def predict(self, impression_group):
-        user_history = impression_group["history_topics"]
-        self.__logger.debug(f"User history topics: {user_history}")
-        
-        topic_scores = {}
-        
-        for history_topic_group in user_history:
-            for topic in history_topic_group:
-                current_topic_score = topic_scores.get(topic, 0)
-                topic_scores[topic] = current_topic_score + 1
-
-        self.__logger.debug(f"User history scored topics: {topic_scores}")
-
-        cand_news_topics_group : list = impression_group["candidates_topics"] 
-
-        news_scores = numpy.array([])
-        
-        for cand_topics in cand_news_topics_group:
-            news_score = topic_scores.get(cand_topics[0], 0) + topic_scores.get(cand_topics[1], 0)
-            news_scores = numpy.append(news_scores, news_score)
-        
-        self.__logger.debug(f"Candidate news scores: {news_scores}")
+        user_history_eval = UserHistoryTopicEval(impression_group)
+        news_scores = user_history_eval.score_news_group(impression_group)
 
         highest_news = news_scores.argmax()
 

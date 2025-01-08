@@ -9,8 +9,8 @@ from transformers import AutoTokenizer
 from transformers import DataCollatorWithPadding
 from transformers import AutoModelForSequenceClassification, TrainingArguments, Trainer
 
-tokenizer = AutoTokenizer.from_pretrained("models/news_prediction/checkpoint-73")
-model = AutoModelForSequenceClassification.from_pretrained("models/news_prediction/checkpoint-73", num_labels=2)
+tokenizer = AutoTokenizer.from_pretrained("models/news-prediction/checkpoint-61485")
+model = AutoModelForSequenceClassification.from_pretrained("models/news-prediction/checkpoint-61485", num_labels=2)
 accuracy = evaluate.load("accuracy")
 
 def preprocess_function(examples):
@@ -28,7 +28,7 @@ data_path = f"./data/demo"
 train_news_file = os.path.join(data_path, 'train', r'news.tsv')
 train_behaviors_file = os.path.join(data_path, 'train', r'behaviors.tsv')
 
-data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, under_sampling_rate=0.01)
+data_loader = MindDatasetFactory(train_news_file, train_behaviors_file, under_sampling_rate=0.05)
 
 mind = data_loader.create_dataset_object()
 
@@ -37,13 +37,11 @@ mind = data_loader.create_dataset_object()
 with torch.no_grad():
     for sample_sentence in mind:
         # sample_sentence = mind[idx]
-        print(sample_sentence)
-
         tokenized_sample = preprocess_function(sample_sentence)
         logits = model(**tokenized_sample).logits
 
         predicted_class_id = logits.argmax().item()
-        print(model.config.id2label[predicted_class_id])
+        print(f"Correct label: {sample_sentence["label"]} Predicted Label: {model.config.id2label[predicted_class_id]} Probabilities: {logits}")
 
 # id2label = {0: "NEGATIVE", 1: "POSITIVE"}
 # label2id = {"NEGATIVE": 0, "POSITIVE": 1}

@@ -21,6 +21,7 @@ class TrainedEval():
         self.__tokenizer = AutoTokenizer.from_pretrained(model_path)
         self.__model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=2)
         self.__logger = logging.getLogger(__name__)
+        self.__logger.setLevel(logging.INFO)
 
     def __get_prob_is_clicked(self, hist_titles, cand_title):
         with torch.no_grad():
@@ -37,7 +38,6 @@ class TrainedEval():
             logits = self.__model(**tokenized_sample).logits
             predicted_class_id = logits.argmax().item()
             return predicted_class_id
-
 
     def order_news(self, impression_data):
         

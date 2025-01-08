@@ -7,7 +7,7 @@ class SimplePref(RankerBase):
         super().__init__(iterator)
         
         self.__logger = logging.getLogger(__name__)
-        self.__logger.setLevel(logging.DEBUG)
+        self.__logger.setLevel(logging.INFO)
 
     def predict(self, impression_group):
         user_history = impression_group["history_topics"]

@@ -7,13 +7,13 @@ from rankers.simple_pref_rank import SimplePref
 from rankers.highest_pref_rank import HighestPref
 from rankers.negotiate_rank import NegotiatePref
 from rankers.voted_rank import VotedPref
+from rankers.trained_group_ranker import TrainedGroupRanker
 from rankers.news_eval.trained_eval import TrainedEval
 
 from tqdm import tqdm
 from models.mind_dataset_loader import MindDatasetFactory
 from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources 
 from recommenders.models.newsrec.newsrec_utils import prepare_hparams
-from rankers.io.news_data_iterator import NewsDataIterator
 from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 
@@ -44,7 +44,7 @@ if not os.path.exists(valid_news_file):
                                os.path.join(data_path, 'valid'), mind_dev_dataset)
 if not os.path.exists(yaml_file):
     download_deeprec_resources(r'https://recodatasets.z20.web.core.windows.net/newsrec/', \
-                               os.path.join(data_path, 'utils'), mind_utils) 
+                               os.path.join(data_path, 'utils'), mind_utils)
 
 epochs = 1
 seed = 42
@@ -63,10 +63,11 @@ base_labels = {}
 
 ranker_models = [
     # RankerBase, 
-    # SimplePref, 
-    # HighestPref,
+    SimplePref, 
+    HighestPref,
     # NegotiatePref,
-    VotedPref
+    # VotedPref
+    TrainedGroupRanker
     ]
 rankers = {}
 predictions = {}

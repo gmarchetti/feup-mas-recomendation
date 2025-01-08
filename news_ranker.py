@@ -18,7 +18,6 @@ from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
 from recommenders.models.deeprec.deeprec_utils import cal_metric
 
 logging.basicConfig(level=logging.INFO)
-
 logger = logging.getLogger(__name__)
 
 MIND_TYPE = 'demo'
@@ -62,17 +61,17 @@ mind_dataset = MindDatasetFactory(valid_news_file, valid_behaviors_file)
 base_labels = {}
 
 ranker_models = [
-    # RankerBase, 
-    # SimplePref, 
-    # HighestPref,
+    SimplePref, 
+    HighestPref,
     # NegotiatePref,
-    VotedPref
-    # TrainedGroupRanker
+    TrainedGroupRanker,
+    VotedPref,
     ]
 rankers = {}
 predictions = {}
 
-for ranker_model in tqdm(ranker_models):
+for ranker_model in ranker_models:
+    logger.info(f">>>>> Running {ranker_model.__name__} Model<<<<<")
     rankers[ranker_model.__name__] = ranker_model(mind_dataset)
     predictions[ranker_model.__name__] = []
     base_labels[ranker_model.__name__] = []
@@ -82,8 +81,10 @@ for ranker_model in tqdm(ranker_models):
         predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
         predictions[ranker_model.__name__].append(predicted_labels)
         base_labels[ranker_model.__name__].append(impression_data["labels"])
-        logger.debug(f">> Base: {impression_data["labels"]}")
-        logger.debug(f">> Predictions {predicted_labels}")
+        logger.debug(f">> Base:")
+        logger.debug(f"{impression_data["labels"]}")
+        logger.debug(f">> Predictions")
+        logger.debug(f"{predicted_labels}")
 
 logger.info("Evaluating Results")
 for ranker_model in ranker_models:

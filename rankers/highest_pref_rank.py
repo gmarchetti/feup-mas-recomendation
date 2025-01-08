@@ -26,7 +26,7 @@ class HighestPref(RankerBase):
 
         self.__logger.debug(f"Highest scored news index: {highest_news}")
 
-        news_predictions = numpy.zeros(len(news_scores))
+        news_predictions = numpy.zeros(len(news_scores), dtype="int")
 
         news_predictions[highest_news] = 1
 

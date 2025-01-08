@@ -64,4 +64,5 @@ class VotedPref(RankerBase):
             if idx in highest_ranked_news_index:
                 news_predictions[idx] = 1
 
+        self.__logger.debug(f"Impression group prediction: {news_predictions}")
         return news_predictions

@@ -32,3 +32,14 @@ class UserHistoryTopicEval():
         self.__logger.debug(f"Candidate news scores: {news_scores}")
 
         return news_scores
+    
+    def order_news(self, impression_data):        
+        cand_news = impression_data["candidate_news_index"]
+        self.__logger.debug(f"Candidate news indexes: {cand_news}")
+        
+        news_scores = self.score_news_group(impression_data)        
+        ordered_news = sorted(cand_news, key=lambda x: news_scores[cand_news.index(x)], reverse=True)
+        self.__logger.debug(f"Sorted Candidate news indexes: {ordered_news}")
+
+        return ordered_news
+    

@@ -6,6 +6,8 @@ from rankers.ranker_base import RankerBase
 from rankers.news_eval.base_eval import BaseEval
 from rankers.news_eval.trained_eval import TrainedEval
 
+from .news_eval.user_history_topic_eval import UserHistoryTopicEval
+
 TOP_RANKS = 2
 
 class VotedPref(RankerBase):
@@ -13,12 +15,11 @@ class VotedPref(RankerBase):
     def __init__(self, iterator):
         super().__init__(iterator)
 
-        self.__title_eval = TrainedEval("models/news-prediction/checkpoint-9414")
-        self.__subject_eval = BaseEval()        
-
-        self.__eps = 0.2
+        self.__title_eval = TrainedEval("models/news-prediction/checkpoint-61485")
+        # self.__subject_eval = BaseEval()        
 
         self.__logger = logging.getLogger(__name__)
+        self.__logger.setLevel(logging.INFO)
 
     def add_votes(votes, news_idx, talied_votes: dict):
         if news_idx in talied_votes.keys():
@@ -27,12 +28,16 @@ class VotedPref(RankerBase):
             talied_votes[news_idx] = votes
 
     def predict(self, impression_info):
-
+        self.__subject_eval = UserHistoryTopicEval(impression_info)
+        
         impression_group = numpy.array(impression_info["candidate_news_index"])
         
         self.__logger.debug(f"Candidate news indexes: {impression_group}")
         title_order_preference = self.__title_eval.order_news(impression_info)
+        self.__logger.debug(f"News ordered by title preference: {title_order_preference}")
+
         subject_order_preference = self.__subject_eval.order_news(impression_info)
+        self.__logger.debug(f"News ordered by subject preference: {subject_order_preference}")
         
         news_votes = {}
 

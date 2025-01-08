@@ -63,36 +63,29 @@ base_labels = {}
 
 ranker_models = [
     # RankerBase, 
-    SimplePref, 
-    HighestPref,
+    # SimplePref, 
+    # HighestPref,
     # NegotiatePref,
-    # VotedPref
-    TrainedGroupRanker
+    VotedPref
+    # TrainedGroupRanker
     ]
 rankers = {}
 predictions = {}
 
-for ranker_model in ranker_models:
+for ranker_model in tqdm(ranker_models):
     rankers[ranker_model.__name__] = ranker_model(mind_dataset)
     predictions[ranker_model.__name__] = []
     base_labels[ranker_model.__name__] = []
-# for impr_indexes, impr_news, uindexes, impr_label in tqdm(iterator.load_impression_from_file(valid_behaviors_file)):
 
-# for ranker_model in ranker_models:
-    # trained_eval = TrainedEval("models/news-prediction/checkpoint-9414")
-    impression_data = mind_dataset.get_news_offer_with_history(0)
-    logger.debug(impression_data)
-    # trained_eval.order_news(impression_data)
-    predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
-    predictions[ranker_model.__name__].append(predicted_labels)
-    base_labels[ranker_model.__name__].append(impression_data["labels"])
-    print(">> Base")
-    print(impression_data["labels"])
-    print(">> Predictions")
-    print(predicted_labels)
+    for idx in tqdm(range(10)):
+        impression_data = mind_dataset.get_news_offer_with_history(idx)
+        predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
+        predictions[ranker_model.__name__].append(predicted_labels)
+        base_labels[ranker_model.__name__].append(impression_data["labels"])
+        logger.debug(f">> Base: {impression_data["labels"]}")
+        logger.debug(f">> Predictions {predicted_labels}")
 
-# print(iterator.load_data_from_file(valid_news_file, valid_behaviors_file).__next__())
-
+logger.info("Evaluating Results")
 for ranker_model in ranker_models:
-    print(f">>>>> {ranker_model.__name__} <<<<<")    
-    print(cal_metric(base_labels[ranker_model.__name__], predictions[ranker_model.__name__], hparams.metrics))
+    logger.info(f">>>>> {ranker_model.__name__} <<<<<")    
+    logger.info(cal_metric(base_labels[ranker_model.__name__], predictions[ranker_model.__name__], hparams.metrics))

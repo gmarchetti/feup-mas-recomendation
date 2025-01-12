@@ -12,7 +12,7 @@ from datasets import IterableDataset, Dataset
 class MindDatasetFactory():
     __impr_indexes = []
     __news_topics_by_index = []
-    __title_topics_by_index = []
+    __news_titles_by_index = []
     __histories = []
     __imprs = []
     __labels = []
@@ -22,26 +22,65 @@ class MindDatasetFactory():
         for impr_idx in MindDatasetFactory.__impr_indexes:
             history_titles = []
             for hist_news in MindDatasetFactory.__histories[impr_idx]:
-                history_titles.append(MindDatasetFactory.__title_topics_by_index[hist_news])
+                history_titles.append(MindDatasetFactory.__news_titles_by_index[hist_news])
             
             candidate_impressions = MindDatasetFactory.__imprs[impr_idx]
             candidate_labels = MindDatasetFactory.__labels[impr_idx]
             for cand_news_index in range(len(candidate_impressions)):
-                cand_news_title = MindDatasetFactory.__title_topics_by_index[candidate_impressions[cand_news_index]]
+                cand_news_title = MindDatasetFactory.__news_titles_by_index[candidate_impressions[cand_news_index]]
                 cand_label = candidate_labels[cand_news_index]
                 training_vect = {"hist_titles" : history_titles, "cand_title" : cand_news_title, "label" : cand_label}
+                yield training_vect
+
+    def generate_topic_training_sample():
+        for impr_idx in MindDatasetFactory.__impr_indexes:
+            history_topics = []
+            for hist_news in MindDatasetFactory.__histories[impr_idx]:
+                history_topics.append(MindDatasetFactory.__news_topics_by_index[hist_news])
+            
+            candidate_impressions = MindDatasetFactory.__imprs[impr_idx]
+            candidate_labels = MindDatasetFactory.__labels[impr_idx]
+            for cand_news_index in range(len(candidate_impressions)):
+                cand_news_topics = MindDatasetFactory.__news_topics_by_index[candidate_impressions[cand_news_index]]
+                cand_label = candidate_labels[cand_news_index]
+                training_vect = {"history_topics" : history_topics, "candidate_topics" : cand_news_topics, "label" : cand_label}
                 yield training_vect
 
     def create_dataset_object(self):
         mind = Dataset.from_generator(MindDatasetFactory.generate_training_sample)
         return mind
 
+    def create_topic_dataset_object(self):
+        mind = Dataset.from_generator(MindDatasetFactory.generate_topic_training_sample)
+        return mind
+    
+    def create_dataset_for_sklearn(self):
+        feature_vector = []
+        label_vector = []
+        
+        for impr_idx in MindDatasetFactory.__impr_indexes:
+            history_topics = []
+            for hist_news in MindDatasetFactory.__histories[impr_idx]:
+                history_topics.append(MindDatasetFactory.__news_topics_by_index[hist_news][0])
+                history_topics.append(MindDatasetFactory.__news_topics_by_index[hist_news][1])
+            
+            candidate_impressions = MindDatasetFactory.__imprs[impr_idx]
+            candidate_labels = MindDatasetFactory.__labels[impr_idx]
+            
+            for cand_news_index in range(len(candidate_impressions)):
+                cand_news_topics = MindDatasetFactory.__news_topics_by_index[candidate_impressions[cand_news_index]]
+                cand_label = candidate_labels[cand_news_index]
+                feature_vector.append({"history_topics" : history_topics, "candidate_topics" : cand_news_topics})
+                label_vector.append(cand_label)
+
+        return feature_vector, label_vector
+
     def get_news_offer_with_history(self, impr_idx):
         
         history_titles = []
         history_topics = []
         for hist_news in MindDatasetFactory.__histories[impr_idx]:
-            history_titles.append(MindDatasetFactory.__title_topics_by_index[hist_news])
+            history_titles.append(MindDatasetFactory.__news_titles_by_index[hist_news])
             history_topics.append(MindDatasetFactory.__news_topics_by_index[hist_news])
         
         candidate_impressions = MindDatasetFactory.__imprs[impr_idx]
@@ -50,7 +89,7 @@ class MindDatasetFactory():
         candidate_topics_array = []
         candidate_labels = MindDatasetFactory.__labels[impr_idx]
         for cand_news_index in range(len(candidate_impressions)):
-            candidate_titles_array.append(MindDatasetFactory.__title_topics_by_index[candidate_impressions[cand_news_index]])
+            candidate_titles_array.append(MindDatasetFactory.__news_titles_by_index[candidate_impressions[cand_news_index]])
             candidate_labels_array.append(candidate_labels[cand_news_index])
             candidate_topics_array.append(MindDatasetFactory.__news_topics_by_index[candidate_impressions[cand_news_index]])
         
@@ -92,7 +131,7 @@ class MindDatasetFactory():
 
                 self.__nid2index[nid] = len(self.__nid2index)
                 MindDatasetFactory.__news_topics_by_index.append([vert, subvert])
-                MindDatasetFactory.__title_topics_by_index.append(title)
+                MindDatasetFactory.__news_titles_by_index.append(title)
 
     def __init_behaviors(self, behaviors_file):
         """init behavior logs given behaviors file.

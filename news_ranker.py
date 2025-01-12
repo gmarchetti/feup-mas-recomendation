@@ -9,6 +9,8 @@ from rankers.negotiate_rank import NegotiatePref
 from rankers.voted_rank import VotedPref
 from rankers.trained_group_ranker import TrainedGroupRanker
 from rankers.news_eval.trained_eval import TrainedEval
+from rankers.news_eval.bayes_eval import BayesTopicEval
+from rankers.highest_bayes_rank import HighestBayesPref
 
 from tqdm import tqdm
 from models.mind_dataset_loader import MindDatasetFactory
@@ -16,6 +18,7 @@ from recommenders.models.deeprec.deeprec_utils import download_deeprec_resources
 from recommenders.models.newsrec.newsrec_utils import prepare_hparams
 from recommenders.models.newsrec.newsrec_utils import get_mind_data_set
 from recommenders.models.deeprec.deeprec_utils import cal_metric
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -64,8 +67,10 @@ ranker_models = [
     SimplePref, 
     HighestPref,
     # NegotiatePref,
-    TrainedGroupRanker,
-    VotedPref,
+    # TrainedGroupRanker,
+    # VotedPref,
+    BayesTopicEval,
+    HighestBayesPref
     ]
 rankers = {}
 predictions = {}
@@ -76,7 +81,7 @@ for ranker_model in ranker_models:
     predictions[ranker_model.__name__] = []
     base_labels[ranker_model.__name__] = []
 
-    for idx in tqdm(range(10)):
+    for idx in tqdm(range(1000)):
         impression_data = mind_dataset.get_news_offer_with_history(idx)
         predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
         predictions[ranker_model.__name__].append(predicted_labels)

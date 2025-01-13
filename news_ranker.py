@@ -10,8 +10,6 @@ from rankers.voted_rank import VotedPref
 from rankers.voted_topn_rank import VotedTopNPref
 from rankers.trained_group_ranker import TrainedGroupRanker
 from rankers.news_eval.trained_eval import TrainedEval
-from rankers.news_eval.bayes_eval import BayesTopicEval
-from rankers.highest_bayes_rank import HighestBayesPref
 
 from tqdm import tqdm
 from models.mind_dataset_loader import MindDatasetFactory

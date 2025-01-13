@@ -7,6 +7,7 @@ from rankers.simple_pref_rank import SimplePref
 from rankers.highest_pref_rank import HighestPref
 from rankers.negotiate_rank import NegotiatePref
 from rankers.voted_rank import VotedPref
+from rankers.voted_topn_rank import VotedTopNPref
 from rankers.trained_group_ranker import TrainedGroupRanker
 from rankers.news_eval.trained_eval import TrainedEval
 from rankers.news_eval.bayes_eval import BayesTopicEval
@@ -64,13 +65,14 @@ mind_dataset = MindDatasetFactory(valid_news_file, valid_behaviors_file)
 base_labels = {}
 
 ranker_models = [
-    SimplePref, 
-    HighestPref,
+    # SimplePref, 
+    # HighestPref,
     # NegotiatePref,
     # TrainedGroupRanker,
     # VotedPref,
-    BayesTopicEval,
-    HighestBayesPref
+    VotedTopNPref,
+    # BayesTopicEval,
+    # HighestBayesPref
     ]
 rankers = {}
 predictions = {}
@@ -81,7 +83,7 @@ for ranker_model in ranker_models:
     predictions[ranker_model.__name__] = []
     base_labels[ranker_model.__name__] = []
 
-    for idx in tqdm(range(1000)):
+    for idx in tqdm(range(100)):
         impression_data = mind_dataset.get_news_offer_with_history(idx)
         predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
         predictions[ranker_model.__name__].append(predicted_labels)

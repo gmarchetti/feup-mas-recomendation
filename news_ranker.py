@@ -83,6 +83,7 @@ def evaluate_standalone_models( base_labels : list ):
     predictions = {}
 
     for ranker_model in ranker_models:
+        logger.info(f">>>>> Running {ranker_model.__name__} Rank Model<<<<<")
         rankers[ranker_model.__name__] = ranker_model()
         predictions[ranker_model.__name__] = []
             

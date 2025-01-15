@@ -5,8 +5,6 @@ import os
 from rankers.ranker_base import RankerBase
 from rankers.simple_pref_rank import SimplePref
 from rankers.highest_pref_rank import HighestPref
-from rankers.negotiate_rank import NegotiatePref
-from rankers.voted_rank import VotedPref
 from rankers.voted_topn_rank import VotedTopNPref
 from rankers.trained_group_ranker import TrainedGroupRanker
 from rankers.news_eval.trained_eval import TrainedEval
@@ -60,38 +58,69 @@ hparams = prepare_hparams(yaml_file,
                           show_step=10)
 
 mind_dataset = MindDatasetFactory(valid_news_file, valid_behaviors_file)
-base_labels = {}
 
-ranker_models = [
-    # SimplePref, 
-    # HighestPref,
-    # NegotiatePref,
-    # TrainedGroupRanker,
-    # VotedPref,
-    VotedTopNPref,
-    # BayesTopicEval,
-    # HighestBayesPref
+def build_validation_labels_list(size : int = None):
+    validation_base_labels = []
+
+    if size is None:
+        for impression_data in mind_dataset.get_all_news_offers():
+            validation_base_labels.append(impression_data["labels"])
+    else:
+        for idx in range(size):
+            impression_data = mind_dataset.get_news_offer_with_history(idx)
+            validation_base_labels.append(impression_data["labels"])
+
+    return validation_base_labels
+
+
+def evaluate_standalone_models( base_labels : list ):
+    ranker_models = [
+        SimplePref, 
+        HighestPref,
+        TrainedGroupRanker,
     ]
-rankers = {}
-predictions = {}
+    rankers = {}
+    predictions = {}
 
-for ranker_model in ranker_models:
-    logger.info(f">>>>> Running {ranker_model.__name__} Model<<<<<")
-    rankers[ranker_model.__name__] = ranker_model(mind_dataset)
-    predictions[ranker_model.__name__] = []
-    base_labels[ranker_model.__name__] = []
+    for ranker_model in ranker_models:
+        rankers[ranker_model.__name__] = ranker_model()
+        predictions[ranker_model.__name__] = []
+            
+        for idx in tqdm(range(len(base_labels))):
+            impression_data = mind_dataset.get_news_offer_with_history(idx)
+            predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
+            predictions[ranker_model.__name__].append(predicted_labels)
+            logger.debug(f">> Base:")
+            logger.debug(f"{impression_data["labels"]}")
+            logger.debug(f">> Predictions")
+            logger.debug(f"{predicted_labels}")
+            
+        logger.info("Evaluating Results")
+        logger.info(cal_metric(base_labels, predictions[ranker_model.__name__], ["group_auc", "mean_mrr", "ndcg@5;10"]))
 
-    for idx in tqdm(range(100)):
-        impression_data = mind_dataset.get_news_offer_with_history(idx)
-        predicted_labels = rankers[ranker_model.__name__].predict(impression_data)
-        predictions[ranker_model.__name__].append(predicted_labels)
-        base_labels[ranker_model.__name__].append(impression_data["labels"])
-        logger.debug(f">> Base:")
-        logger.debug(f"{impression_data["labels"]}")
-        logger.debug(f">> Predictions")
-        logger.debug(f"{predicted_labels}")
+def evaluate_voted_model(base_labels : list):
+    ranker = VotedTopNPref()
 
-logger.info("Evaluating Results")
-for ranker_model in ranker_models:
-    logger.info(f">>>>> {ranker_model.__name__} <<<<<")    
-    logger.info(cal_metric(base_labels[ranker_model.__name__], predictions[ranker_model.__name__], hparams.metrics))
+    for i in range(1,8):
+        logger.info(f">>>>> Running Voted Rank Model with {i} Top Ranked News<<<<<")
+        
+        predictions = []
+        ranker.set_rank_threshold(i)
+        
+        for idx in tqdm(range(len(base_labels))):
+            impression_data = mind_dataset.get_news_offer_with_history(idx)
+            predicted_labels = ranker.predict(impression_data)
+            predictions.append(predicted_labels)
+            logger.debug(f">> Base:")
+            logger.debug(f"{impression_data["labels"]}")
+            logger.debug(f">> Predictions")
+            logger.debug(f"{predicted_labels}")
+        
+        logger.info("Evaluating Results")
+        logger.info(cal_metric(base_labels, predictions, ["group_auc", "mean_mrr", "ndcg@5;10"]))
+
+if __name__ == '__main__':
+    validation_set = build_validation_labels_list(1000)
+    # evaluate_standalone_models(validation_set)
+    evaluate_voted_model(validation_set)
+    

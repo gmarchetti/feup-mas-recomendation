@@ -10,7 +10,7 @@ from .news_eval.user_history_topic_eval import UserHistoryTopicEval
 class VotedTopNPref(RankerBase):
 
     def __init__(self):
-        super.__init__()
+        super().__init__()
         self.__title_eval = TrainedEval("models/news-prediction/checkpoint-61485")
 
         self.logger.setLevel(logging.INFO)

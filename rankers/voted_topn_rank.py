@@ -7,9 +7,6 @@ from rankers.news_eval.trained_eval import TrainedEval
 
 from .news_eval.user_history_topic_eval import UserHistoryTopicEval
 
-TOP_RANKS = 3
-VOTE_THRESHOLD = 3
-
 class VotedTopNPref(RankerBase):
 
     def __init__(self, iterator):
@@ -21,11 +18,16 @@ class VotedTopNPref(RankerBase):
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.INFO)
 
+        self.__rank_threshold = 1
+
     def add_votes(votes, news_idx, talied_votes: dict):
         if news_idx in talied_votes.keys():
             talied_votes[news_idx] += votes
         else:
             talied_votes[news_idx] = votes
+    
+    def set_rank_threshold(self, threshold):
+        self.__rank_threshold = threshold
 
     def predict(self, impression_info):
         self.__subject_eval = UserHistoryTopicEval(impression_info)
@@ -41,19 +43,22 @@ class VotedTopNPref(RankerBase):
         
         news_votes_totals = {}
 
-        for idx in range(min(TOP_RANKS, len(impression_group))):
-            VotedTopNPref.add_votes(4/(idx+1), title_order_preference[idx], news_votes_totals)
-            VotedTopNPref.add_votes(4/(idx+1), subject_order_preference[idx], news_votes_totals)
+        for idx in range(len(impression_group)):
+            VotedTopNPref.add_votes(len(impression_group) - idx, title_order_preference[idx], news_votes_totals)
+            VotedTopNPref.add_votes(len(impression_group) - idx, subject_order_preference[idx], news_votes_totals)
 
         self.__logger.debug("Talied news votes")
         self.__logger.debug(news_votes_totals)
-        
+         
+        ordered_news = sorted(news_votes_totals, key=lambda x: news_votes_totals.get(x,0), reverse=True)
+        self.__logger.debug(f"Sorted Candidate news indexes: {ordered_news}")
+
         news_predictions = []
         for idx in range(len(impression_group)):
             news_predictions.append(0)
-            news_votes = news_votes_totals.get(impression_group[idx], 0)
-            self.__logger.debug(f"News {impression_group[idx]} got {news_votes} votes")
-            if news_votes > VOTE_THRESHOLD:
+            news_position = ordered_news.index(impression_group[idx])
+            self.__logger.debug(f"News {impression_group[idx]} is the {news_position}-th placed news")
+            if news_position < self.__rank_threshold:
                 news_predictions[idx] = 1
 
         self.__logger.debug(f"Impression group prediction: {news_predictions}")

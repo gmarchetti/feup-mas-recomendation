@@ -5,8 +5,8 @@ from .news_eval.user_history_topic_eval import UserHistoryTopicEval
 
 class SimplePref(RankerBase):
 
-    def __init__(self, iterator):
-        super().__init__(iterator)
+    def __init__(self):
+        super().__init__()
         
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.INFO)

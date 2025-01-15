@@ -10,8 +10,8 @@ TOP_RANKS = 2
 
 class TrainedGroupRanker(RankerBase):
 
-    def __init__(self, iterator):
-        super().__init__(iterator)
+    def __init__(self):
+        super().__init__()
 
         self.__title_eval = TrainedEval("models/news-prediction/checkpoint-61485")
         self.__logger = logging.getLogger(__name__)

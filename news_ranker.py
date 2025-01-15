@@ -120,7 +120,7 @@ def evaluate_voted_model(base_labels : list):
         logger.info(cal_metric(base_labels, predictions, ["group_auc", "mean_mrr", "ndcg@5;10"]))
 
 if __name__ == '__main__':
-    validation_set = build_validation_labels_list(1000)
-    # evaluate_standalone_models(validation_set)
+    validation_set = build_validation_labels_list()
+    evaluate_standalone_models(validation_set)
     evaluate_voted_model(validation_set)
     

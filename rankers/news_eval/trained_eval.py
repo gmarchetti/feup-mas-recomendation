@@ -15,11 +15,11 @@ class TrainedEval():
         for title in hist_titles:
             full_concat += "[SEP]" + title.lower()        
 
-        return self.__tokenizer(full_concat, truncation=True, return_tensors="pt")
+        return self.__tokenizer(full_concat, truncation=True, return_tensors="pt").to('cuda')
     
     def __init__(self, model_path):
         self.__tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.__model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=2)
+        self.__model = AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=2).to('cuda')
         self.__logger = logging.getLogger(__name__)
         self.__logger.setLevel(logging.INFO)
 
